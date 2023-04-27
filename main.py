@@ -34,7 +34,6 @@ usuario = {
     "id_rol": "",
 }
 
-
 # Validador de expresiones regulares
 # _txt es el texto a validar. _regex es el patrón de expresión regular a validar.
 def RegEx(_txt, _regex):
@@ -82,7 +81,7 @@ def menuPrincipal():
     print("_" * 40 + "\n")
 
 
-# Función que obtiene con request.get los usuarios y despues con pretty.json muestra los usuarios.
+# Función que obtiene con request.get los usuarios.
 def consultarUsuarios():
     headers = {"Content-Type": "application/json"}
     response = requests.get(
@@ -95,8 +94,8 @@ def consultarUsuarios():
     # print(json_formatted_str)
     imprimirUsuarios(lstUsuarios)
 
+# Función que imprime los usuarios.
 def imprimirUsuarios(lstUsuarios):
-    print("\n")
     for usuario in lstUsuarios:
         print('ID:', usuario['id_usuario'])
         print('Nombre completo:', usuario['nombre_completo'])
@@ -106,6 +105,45 @@ def imprimirUsuarios(lstUsuarios):
         print('Fecha registro:', usuario['fecha_registro'])
         print('')
     print("_" * 40 + "\n")
+
+def crearUsuario(usuario):
+    response = requests.post('https://localhost:44357/api/Usuario/GuardarUsuario', json=usuario, verify=False)
+    json_response = response.json()
+    print('\n', json_response['value'])
+
+    # if response.status_code == 200 or response.status_code == 201:
+    #     print('Información guardada')
+    # elif response.status_code == 404:
+    #     print('Not Found.')
+
+def verEntradaFormulario(usuario):
+    print("_" * 40 + "\n")
+    print("Tú ingresaste en el formulario...\n")
+    print("Nombre: ", usuario["nombre"])
+    print("Primer apellido: ", usuario["primer_apellido"])
+    print("Segundo apellido: ", usuario["segundo_apellido"])
+    print("Fecha de nacimiento: ", usuario["fecha_nacimiento"])
+    print("Sexo: ", usuario["sexo"])
+    print("Celular: ", usuario["celular"])
+    print("Correo: ", usuario["correo"])
+    print("Contraseña: ", usuario["contrasenia"])
+    print("Estado: ", usuario["es_activo"])
+    print("Rol: ", usuario["id_rol"])
+
+# Función de formulario para ingresar los valores al objeto usuario.
+def formularioUsuario():
+    usuario["nombre"] = input("Ingresa los nombres: ")
+    usuario["primer_apellido"] = input("Ingresa el primer apellido: ")
+    usuario["segundo_apellido"] = input("Ingresa el segundo apellido: ")
+    usuario["fecha_nacimiento"] = input("Ingresa la fecha de nacimiento: ")
+    usuario["sexo"] = input("Ingresa el sexo: ")
+    usuario["celular"] = input("Ingresa el celular: ")
+    usuario["correo"] = input("Ingresa el correo:  ")
+    usuario["contrasenia"] = input("Ingresa la contraseña: ")
+    usuario["es_activo"] = int(input("Ingresa el estado de actividad: "))
+    usuario["id_rol"] = int(input("Ingresa el rol: "))
+
+    verEntradaFormulario(usuario)
 
 # Ciclo para que nos muestre el menú por cada vez que entramos y salimos de las opciones.
 while True:
@@ -117,12 +155,12 @@ while True:
             # while respuesta == 1:
             print("_" * 40 + "\n")
             print("   [1] Consultar usuarios.")
-            print("_" * 40)
+            print("_" * 40 + "\n")
 
             consultarUsuarios()
 
             #     validarPregunta(r"^[1-9]{1}[0-9]{0,}$","\n¿Cuántos articulos se registrarán?: ")
-            #     validarPregunta(r"^[01]{1}$","\n¿Deseas realizar otra venta? \n (1-Si / 0-No): ")
+            # validarPregunta(r"^[01]{1}$","\n¿Deseas realizar otra venta? \n (1-Si / 0-No): ")
 
             #     respuesta = resultado
             #     cant_articulos = 0
@@ -135,7 +173,20 @@ while True:
             # venta = []
 
         elif opcion == "2":
-            pass
+                while respuesta == 1:
+                    print("_" * 40 + "\n")
+                    print("   [2] Crear usuario.")
+                    print("_" * 40 + "\n")
+
+                    formularioUsuario()
+                    validarPregunta(r"^[01]{1}$","\n¿Deseas guardar el usuario del formulario? \n (1-Si / 0-No): ")
+
+                    if resultado == 1:
+                        crearUsuario(usuario)
+                        break
+                    else:
+                        validarPregunta(r"^[01]{1}$","\n¿Deseas crear un nuevo usuario? \n (1-Si / 0-No): ")
+                        respuesta = resultado
 
         elif opcion == "3":
             # respuesta = 1
@@ -363,28 +414,7 @@ def postCrearUsuario(endPoint, payload):
     return response.json()
 
 
-def mostrarUsuarios():
-    getConsultarUsuarios("/Usuario/GuardarUsuario")
 
-
-def formularioUsuario():
-    print("_" * 40 + "\n")
-    print("   [2] Crear usuario.")
-    print("_" * 40)
-    usuario["nombre"] = input("Ingresa los nombres: ")
-    usuario["primer_apellido"] = input("Ingresa el primer apellido: ")
-    usuario["segundo_apellido"] = input("Ingresa el segundo apellido: ")
-    usuario["fecha_nacimiento"] = input("Ingresa la fecha de nacimiento: ")
-    usuario["sexo"] = input("Ingresa el sexo: ")
-    usuario["celular"] = input("Ingresa el celular: ")
-    usuario["correo"] = input("Ingresa el correo:  ")
-    usuario["contrasenia"] = input("Ingresa la contraseña: ")
-    usuario["es_activo"] = int(input("Ingresa el estado de actividad: "))
-    usuario["id_rol"] = int(input("Ingresa el rol: "))
-
-    print(usuario)
-
-    postCrearUsuario("/Usuario/ListarUsuario", usuario)
 
 
 d = {"a": 1, "b": 2}
