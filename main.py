@@ -3,6 +3,7 @@ import urllib3
 import re
 import pandas as pd
 import json
+import datetime
 
 urllib3.disable_warnings()
 # Librerías y desabilitación de advertencias.
@@ -14,7 +15,7 @@ BASE_URL = "https://localhost:44357/api"
 # Tuplas
 columnas = ("ID", "Nombre completo", "Correo", "Rol", "Estado", "Fecha registro")
 
-# Imprime los key y value del diccionario
+# Para recorrer e imprimir los key y value del diccionario
 dictRoles = {
     2: "Programador",
     3: "Administrar de BD",
@@ -30,9 +31,6 @@ dictEstadosUsuario = {0: "Inactivo", 1: "Activo"}
 lstUsuarios = []
 
 # Expresión regular
-# emailPattern = "/^(?=[a-zA-Z0-9@.%+-]{6,254}$)[a-zA-Z0-9.%+-]{1,64}@(?:[a-zA-Z0-9-]{1,63}\.){1,8}[a-zA-Z]{2,63}$/"
-# passwordPattern = "/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{10,})/"
-
 emailPattern = r"^(?=[a-zA-Z0-9@.%+-]{6,254}$)[a-zA-Z0-9.%+-]{1,64}@(?:[a-zA-Z0-9-]{1,63}\.){1,8}[a-zA-Z]{2,63}$"
 passwordPattern = r"(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{10,})"
 
@@ -114,6 +112,30 @@ def validarCampo(_patron, _tipo="text", _pregunta="Dame un dato: "):
         else:
             print("*** El dato ingresado no es correcto. Intenta de nuevo. ***")
     return respuesta
+
+
+def validarFecha():
+    while not fecha_aceptada:
+        try:
+            fecha_actual = datetime.date.today()
+            fecha_capturada = input(
+                "\nIngresa una fecha específica para generar reporte (dd/mm/aaaa): "
+            )
+            fecha_procesada = datetime.datetime.strptime(
+                fecha_capturada, "%Y/%m/%d"
+            ).date()
+            if fecha_procesada <= fecha_actual:
+                fecha_aceptada = True
+            else:
+                print(
+                    "*** Ingresa una fecha no mayor al día de hoy. Intenta de nuevo ***"
+                )
+                fecha_aceptada = False
+        except ValueError:
+            print(
+                "*** La fecha proporcionada no se encuentra en el formato indicato, favor de corregir. ***"
+            )
+    return fecha_procesada
 
 
 # Función del menú para que se ejecute cada vez al término de cada opción.
@@ -265,7 +287,7 @@ while True:
                 )
 
                 usuario = formularioUsuario()
-                
+
                 validarPregunta(
                     r"^[01]{1}$",
                     "\n¿Deseas actualizar el usuario del formulario? \n (1-Si / 0-No): ",
@@ -285,103 +307,9 @@ while True:
             respuesta = 1
             exportar = 1
             while respuesta == 1:
-                while not fecha_aceptada:
-                    try:
-                        fecha_actual = datetime.date.today()
-                        fecha_capturada = input(
-                            "\nIngresa una fecha específica para generar reporte (dd/mm/aaaa): "
-                        )
-                        fecha_procesada = datetime.datetime.strptime(
-                            fecha_capturada, "%d/%m/%Y"
-                        ).date()
-                        if fecha_procesada <= fecha_actual:
-                            fecha_aceptada = True
-                        else:
-                            print(
-                                "*** Ingresa una fecha no mayor al día de hoy. Intenta de nuevo ***"
-                            )
-                            fecha_aceptada = False
-                    except ValueError:
-                        print(
-                            "*** La fecha proporcionada no se encuentra en el formato indicato, favor de corregir. ***"
-                        )
-                try:
-                    with sqlite3.connect(
-                        "CosmetiqueríaFinal.db",
-                        detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES,
-                    ) as conn:
-                        mi_cursor = conn.cursor()
-                        criterios = {"fecha": fecha_procesada}
-                        mi_cursor.execute(
-                            "SELECT * FROM ventas WHERE DATE(fecha_registro) = :fecha;",
-                            criterios,
-                        )
-                        venta = mi_cursor.fetchall()
-
-                        if venta:
-                            print(
-                                f"\n{encabezados[0]}\t{encabezados[1]}\t\t{encabezados[2]}"
-                            )
-                            print("---------------------------------" * 2)
-                        else:
-                            print(
-                                f"\nNo hay registros de venta con la fecha: {fecha_capturada}"
-                            )
-
-                        for folio, monto, fecha_registro in venta:
-                            print(f"{folio}\t\t", end="")
-                            print("${:.2f}".format(monto) + " mxn\t", end="")
-                            print(fecha_registro)
-                            suma_ventas = suma_ventas + monto
-                            ventas_dic[folio] = {
-                                "No. Venta": folio,
-                                "Monto": monto,
-                                "Fecha": fecha_registro,
-                            }
-                        print("---------------------------------" * 2)
-                except sqlite3.Error as e:
-                    print(e)
-                except Exception:
-                    print(f"Se produjo el siguiente error: {sys.exc_info()[0]}")
-                finally:
-                    if conn:
-                        conn.close()
-                if venta:
-                    print(
-                        f"\nVenta realizadas: {len(ventas_dic)} en la fecha consultada: {fecha_registro}"
-                    )
-                    print(
-                        "La suma del importe de las ventas es de: ${:.2f}".format(
-                            suma_ventas
-                        )
-                        + " mxn"
-                    )
-                validarPregunta(
-                    r"^[01]{1}$",
-                    "\n¿Deseas consultar otra fecha para el reporte? \n (1-Si / 0-No): ",
-                )
-                respuesta = resultado
-                fecha_aceptada = False
-                suma_ventas = 0
-            if venta:
-                validarPregunta(
-                    r"^[01]{1}$",
-                    "\n¿Deseas exportar el reporte de dicha consulta? \n (1-Si / 0-No): ",
-                )
-                exportar = resultado
-                while exportar == 1:
-                    print("\nExportando archivo...")
-                    df_ventas = pd.DataFrame(ventas_dic)
-                    df_ventas.to_csv(r"reporte_fecha.csv", index=True, header=None)
-                    print("Exportación exitosa")
-                    del df_ventas
-                    exportar = 0
-            # Reseteo
-            estructuraArticulo = {}
-            valores = {}
-            ventas_dic = {}
-            venta = []
-
+                fecha_nacimiento = validarFecha()
+                print(fecha_nacimiento)
+                
         elif opcion == "x" or opcion == "X":
             print("\n         *** Inovatech ***       ")
             break
