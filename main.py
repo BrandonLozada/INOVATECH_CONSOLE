@@ -14,11 +14,22 @@ BASE_URL = "https://localhost:44357/api"
 # Tuplas
 columnas = ("ID", "Nombre completo", "Correo", "Rol", "Estado", "Fecha registro")
 
+# Imprime los key y value del diccionario
+dictRoles = {
+    2: "Programador",
+    3: "Administrar de BD",
+    4: "Administrador",
+    5: "Soporte de Aplicaciones",
+    6: "Encargado de Sistemas",
+    7: "Ordinario",
+}
+
 # Listas
 lstUsuarios = []
 
-# Ciclo dentro de cada opción...
-
+# Expresión regular
+emailPattern = "/^(?=[a-zA-Z0-9@.%+-]{6,254}$)[a-zA-Z0-9.%+-]{1,64}@(?:[a-zA-Z0-9-]{1,63}\.){1,8}[a-zA-Z]{2,63}$/"
+passwordPattern = "/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{10,})/"
 
 # Estructura del objeto usuarioDTO conforme a la WEB API.
 usuario = {
@@ -34,26 +45,12 @@ usuario = {
     "id_rol": "",
 }
 
+
 # Validador de expresiones regulares
 # _txt es el texto a validar. _regex es el patrón de expresión regular a validar.
 def RegEx(_txt, _regex):
     coincidencia = re.match(_regex, _txt)
     return bool(coincidencia)
-
-
-# Función que valida un dato, y si es correcto, lo coloca en captura. RegEx por función.
-def validarDatos(_patron, _pregunta="Dame un dato: "):
-    # Se especifica que captura es global.
-    global captura
-    while True:
-        _fxvalor = input(_pregunta)
-        coincide = re.search(_patron, _fxvalor)
-        if coincide:
-            captura = _fxvalor
-            break
-        else:
-            print("*** El dato no es correcto. Intenta de nuevo. ***")
-
 
 # Función que valida una respuesta, y si es correcto, lo coloca en resultado. RegEx por función.
 def validarPregunta(_patron, _pregunta="Dame un dato: "):
@@ -66,6 +63,39 @@ def validarPregunta(_patron, _pregunta="Dame un dato: "):
             break
         else:
             print("*** La respuesta no es correcta. Intenta de nuevo. ***")
+
+
+# def isValidEmail(val):
+#     if (val):
+#         return emailPattern.test(val) || 'El correo electrónico no tiene formato correcto'
+#     else:
+#         return 'Correo electrónico es requerido'
+
+# def isValidPassword(val):
+#     if (val): 
+#         return passwordPattern.test(val) || 'La contraseña no cumple con los requisitos'
+#     else:
+#         return 'Contraseña obligatoria'
+
+
+# Función que valida una respuesta, y si es correcto, lo coloca en resultado. RegEx por función.
+def validarDatos(_patron, _pregunta="Dame un dato: "):
+    global respuesta
+    while True:
+        if _pregunta == "\nIngresa el rol: ":
+            print("\nIngresa el rol: ")
+            for x, y in dictRoles.items():
+                print(f"{x} - {y}")
+            _valor_ingresado = input()
+        else:
+            _valor_ingresado = input(_pregunta)
+        coincide = re.search(_patron, _valor_ingresado)
+        if coincide:
+            respuesta = int(_valor_ingresado)
+            break
+        else:
+            print("*** El dato ingresado no es correcto. Intenta de nuevo. ***")
+    return respuesta
 
 
 # Función del menú para que se ejecute cada vez al término de cada opción.
@@ -94,27 +124,32 @@ def consultarUsuarios():
     # print(json_formatted_str)
     imprimirUsuarios(lstUsuarios)
 
+
 # Función que imprime los usuarios.
 def imprimirUsuarios(lstUsuarios):
     for usuario in lstUsuarios:
-        print('ID:', usuario['id_usuario'])
-        print('Nombre completo:', usuario['nombre_completo'])
-        print('Correo:', usuario['correo'])
-        print('Rol:', usuario['rol'])
-        print('Activo:', usuario['activo'])
-        print('Fecha registro:', usuario['fecha_registro'])
-        print('')
+        print("ID:", usuario["id_usuario"])
+        print("Nombre completo:", usuario["nombre_completo"])
+        print("Correo:", usuario["correo"])
+        print("Rol:", usuario["rol"])
+        print("Activo:", usuario["activo"])
+        print("Fecha registro:", usuario["fecha_registro"])
+        print("")
     print("_" * 40 + "\n")
 
+
 def crearUsuario(usuario):
-    response = requests.post('https://localhost:44357/api/Usuario/GuardarUsuario', json=usuario, verify=False)
+    response = requests.post(
+        "https://localhost:44357/api/Usuario/GuardarUsuario", json=usuario, verify=False
+    )
     json_response = response.json()
-    print('\n', json_response['value'])
+    print("\n", json_response["value"])
 
     # if response.status_code == 200 or response.status_code == 201:
     #     print('Información guardada')
     # elif response.status_code == 404:
     #     print('Not Found.')
+
 
 def verEntradaFormulario(usuario):
     print("_" * 40 + "\n")
@@ -130,8 +165,10 @@ def verEntradaFormulario(usuario):
     print("Estado: ", usuario["es_activo"])
     print("Rol: ", usuario["id_rol"])
 
+
 # Función de formulario para ingresar los valores al objeto usuario.
 def formularioUsuario():
+    usuario = {}
     usuario["nombre"] = input("Ingresa los nombres: ")
     usuario["primer_apellido"] = input("Ingresa el primer apellido: ")
     usuario["segundo_apellido"] = input("Ingresa el segundo apellido: ")
@@ -140,10 +177,15 @@ def formularioUsuario():
     usuario["celular"] = input("Ingresa el celular: ")
     usuario["correo"] = input("Ingresa el correo:  ")
     usuario["contrasenia"] = input("Ingresa la contraseña: ")
-    usuario["es_activo"] = int(input("Ingresa el estado de actividad: "))
-    usuario["id_rol"] = int(input("Ingresa el rol: "))
-
+    usuario["es_activo"] = validarDatos(
+        r"^[0-1]{1}$", "Ingresa el estado de actividad \n (1-Activo / 0-Inactivo): : "
+    )
+    usuario["id_rol"] = validarDatos(
+        r"^[2-7]{1}$",
+        "\nIngresa el rol: ",
+    )
     verEntradaFormulario(usuario)
+
 
 # Ciclo para que nos muestre el menú por cada vez que entramos y salimos de las opciones.
 while True:
@@ -159,131 +201,49 @@ while True:
 
             consultarUsuarios()
 
+        elif opcion == "2":
+            while respuesta == 1:
+                print("_" * 40 + "\n")
+                print("   [2] Crear usuario.")
+                print("_" * 40 + "\n")
+
+                formularioUsuario()
+                validarPregunta(
+                    r"^[01]{1}$",
+                    "\n¿Deseas guardar el usuario del formulario? \n (1-Si / 0-No): ",
+                )
+
+                if resultado == 1:
+                    crearUsuario(usuario)
+                    break
+                else:
+                    validarPregunta(
+                        r"^[01]{1}$",
+                        "\n¿Deseas crear un nuevo usuario? \n (1-Si / 0-No): ",
+                    )
+                    respuesta = resultado
+
+        elif opcion == "3":
+            while respuesta == 1:
+                # IdUsuario = validarDatos(
+                #     r"^[1-9]{1}[0-9]{0,}$",
+                #     "\nDime el ID del usuario que deseas actualizar: ",
+                # )
+
+                formularioUsuario()
+
+                emailPattern = r"^(?=[a-zA-Z0-9@.%+-]{6,254}$)[a-zA-Z0-9.%+-]{1,64}@(?:[a-zA-Z0-9-]{1,63}\.){1,8}[a-zA-Z]{2,63}$"
+                passwordPattern = r"(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{10,})"
+
+                correo = validarDatos(emailPattern ,"\nIngresa el correo:  ")
+                print(correo)
+                contrasenia = validarDatos(passwordPattern ,"\nIngresa la contraseña: ")
+                print(contrasenia)
+
             #     validarPregunta(r"^[1-9]{1}[0-9]{0,}$","\n¿Cuántos articulos se registrarán?: ")
             # validarPregunta(r"^[01]{1}$","\n¿Deseas realizar otra venta? \n (1-Si / 0-No): ")
 
             #     respuesta = resultado
-            #     cant_articulos = 0
-            #     subtotal = 0
-            #     fecha_aceptada = False
-            # #Reseteo
-            # estructuraArticulo = {}
-            # valores = {}
-            # lista_subtotales = []
-            # venta = []
-
-        elif opcion == "2":
-                while respuesta == 1:
-                    print("_" * 40 + "\n")
-                    print("   [2] Crear usuario.")
-                    print("_" * 40 + "\n")
-
-                    formularioUsuario()
-                    validarPregunta(r"^[01]{1}$","\n¿Deseas guardar el usuario del formulario? \n (1-Si / 0-No): ")
-
-                    if resultado == 1:
-                        crearUsuario(usuario)
-                        break
-                    else:
-                        validarPregunta(r"^[01]{1}$","\n¿Deseas crear un nuevo usuario? \n (1-Si / 0-No): ")
-                        respuesta = resultado
-
-        elif opcion == "3":
-            # respuesta = 1
-            # exportar = 1
-            while respuesta == 1:
-                validarPregunta(
-                    r"^[1-9]{1}[0-9]{0,}$",
-                    "\nDime la clave de la venta que deseas consultar: ",
-                )
-                clave_buscar = resultado
-                try:
-                    with sqlite3.connect(
-                        "CosmetiqueríaFinal.db",
-                        detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES,
-                    ) as conn:
-                        mi_cursor = conn.cursor()
-                        # global id_dic
-                        criterios = {"folio": clave_buscar}
-
-                        mi_cursor.execute(
-                            "SELECT ven.id_venta, ven.monto, ven.fecha_registro, det.id_articulo_fk, art.descripcion, det.cantidad_comprada, art.precio, (det.cantidad_comprada * art.precio) AS SUBTOTAL \
-                        FROM ventas AS ven \
-                        JOIN detalle_venta AS det ON ven.id_venta = det.id_venta_fk \
-                        JOIN articulos AS art ON det.id_articulo_fk = art.id_articulo \
-                        WHERE ven.id_venta = :folio \
-                        ORDER BY ven.id_venta;",
-                            criterios,
-                        )
-                        venta = mi_cursor.fetchall()
-
-                        if venta:
-                            print(
-                                f"\n{det_encabezados[0]}\t{det_encabezados[1]}\t{det_encabezados[2]}\t{det_encabezados[3]}\t\t{det_encabezados[4]}"
-                            )
-                            print("---------------------------------------" * 2)
-                        else:
-                            print(
-                                f"\nNo hay registros de venta con la clave: {clave_buscar}"
-                            )
-                        id_dic = 0
-                        for (
-                            folio,
-                            monto,
-                            fecha_registro,
-                            sku,
-                            descripcion,
-                            cantidad_comprada,
-                            precio,
-                            subtotal,
-                        ) in venta:
-                            id_dic += 1
-                            print(f"{sku}\t", end="")
-                            print(f"{descripcion}\t\t", end="")
-                            print(f"{cantidad_comprada}\t\t", end="")
-                            print("${:.2f}".format(precio) + "\t\t", end="")
-                            print("${:.2f}".format(subtotal) + " mxn")
-                            venta_dic[id_dic] = {
-                                "No. Venta": folio,
-                                "Monto": monto,
-                                "Fecha": fecha_registro,
-                                "Clave": sku,
-                                "Articulo": descripcion,
-                                "Cantidad": cantidad_comprada,
-                                "Precio": precio,
-                                "Subtotal": subtotal,
-                            }
-                        print("---------------------------------------" * 2)
-                except Error as e:
-                    print(e)
-                except:
-                    print(f"Se produjo el siguiente error: {sys.exc_info()[0]}")
-                finally:
-                    conn.close()
-                if venta:
-                    print(
-                        f"\nVenta encontrada: #{folio} - Fecha de registro: {fecha_registro}"
-                    )
-                    print("El monto total fue: ${:.2f}".format(monto) + " mxn")
-                validarPregunta(
-                    r"^[01]{1}$", "\n¿Deseas consultar otra venta? \n (1-Si / 0-No): "
-                )
-                respuesta = resultado
-            # if venta:
-            #     validarPregunta(r"^[01]{1}$","\n¿Deseas exportar un reporte de dicha consulta? \n (1-Si / 0-No): ")
-            #     exportar = resultado
-            #     while exportar == 1:
-            #         print("\nExportando archivo...")
-            #         df_venta = pd.DataFrame(venta_dic)
-            #         df_venta.to_csv (r'reporte_venta.csv',index=True, header=None)
-            #         print("Exportación exitosa")
-            #         del df_venta
-            #         exportar = 0
-            # #Reseteo
-            # estructuraArticulo = {}
-            # valores = {}
-            # venta_dic = {}
-            # venta = []
 
         elif opcion == "4":
             respuesta = 1
@@ -412,9 +372,6 @@ def postCrearUsuario(endPoint, payload):
     elif response.status_code == 404:
         print("Not Found.")
     return response.json()
-
-
-
 
 
 d = {"a": 1, "b": 2}
