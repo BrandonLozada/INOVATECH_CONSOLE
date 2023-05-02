@@ -24,12 +24,17 @@ dictRoles = {
     7: "Ordinario",
 }
 
+dictEstadosUsuario = {0: "Inactivo", 1: "Activo"}
+
 # Listas
 lstUsuarios = []
 
 # Expresión regular
-emailPattern = "/^(?=[a-zA-Z0-9@.%+-]{6,254}$)[a-zA-Z0-9.%+-]{1,64}@(?:[a-zA-Z0-9-]{1,63}\.){1,8}[a-zA-Z]{2,63}$/"
-passwordPattern = "/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{10,})/"
+# emailPattern = "/^(?=[a-zA-Z0-9@.%+-]{6,254}$)[a-zA-Z0-9.%+-]{1,64}@(?:[a-zA-Z0-9-]{1,63}\.){1,8}[a-zA-Z]{2,63}$/"
+# passwordPattern = "/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{10,})/"
+
+emailPattern = r"^(?=[a-zA-Z0-9@.%+-]{6,254}$)[a-zA-Z0-9.%+-]{1,64}@(?:[a-zA-Z0-9-]{1,63}\.){1,8}[a-zA-Z]{2,63}$"
+passwordPattern = r"(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{10,})"
 
 # Estructura del objeto usuarioDTO conforme a la WEB API.
 usuario = {
@@ -52,6 +57,7 @@ def RegEx(_txt, _regex):
     coincidencia = re.match(_regex, _txt)
     return bool(coincidencia)
 
+
 # Función que valida una respuesta, y si es correcto, lo coloca en resultado. RegEx por función.
 def validarPregunta(_patron, _pregunta="Dame un dato: "):
     global resultado
@@ -65,26 +71,18 @@ def validarPregunta(_patron, _pregunta="Dame un dato: "):
             print("*** La respuesta no es correcta. Intenta de nuevo. ***")
 
 
-# def isValidEmail(val):
-#     if (val):
-#         return emailPattern.test(val) || 'El correo electrónico no tiene formato correcto'
-#     else:
-#         return 'Correo electrónico es requerido'
-
-# def isValidPassword(val):
-#     if (val): 
-#         return passwordPattern.test(val) || 'La contraseña no cumple con los requisitos'
-#     else:
-#         return 'Contraseña obligatoria'
-
-
 # Función que valida una respuesta, y si es correcto, lo coloca en resultado. RegEx por función.
 def validarDatos(_patron, _pregunta="Dame un dato: "):
     global respuesta
     while True:
-        if _pregunta == "\nIngresa el rol: ":
-            print("\nIngresa el rol: ")
+        if _pregunta == "Ingresa el rol: ":
+            print(_pregunta)
             for x, y in dictRoles.items():
+                print(f"{x} - {y}")
+            _valor_ingresado = input()
+        elif _pregunta == "Ingresa el estado de actividad: ":
+            print(_pregunta)
+            for x, y in dictEstadosUsuario.items():
                 print(f"{x} - {y}")
             _valor_ingresado = input()
         else:
@@ -92,6 +90,26 @@ def validarDatos(_patron, _pregunta="Dame un dato: "):
         coincide = re.search(_patron, _valor_ingresado)
         if coincide:
             respuesta = int(_valor_ingresado)
+            break
+        else:
+            print("*** El dato ingresado no es correcto. Intenta de nuevo. ***")
+    return respuesta
+
+
+def validarCampo(_patron, _tipo="text", _pregunta="Dame un dato: "):
+    global respuesta
+    while True:
+        if _tipo == "password":
+            print(_pregunta)
+            print(
+                "(Ingresa 10 caracteres o más; al menos una letra minúscula, una letra mayúscula, un número y un símbolo): "
+            )
+            _valor_ingresado = input()
+        elif _tipo == "text":
+            _valor_ingresado = input(_pregunta)
+        coincide = re.search(_patron, _valor_ingresado)
+        if coincide:
+            respuesta = _valor_ingresado
             break
         else:
             print("*** El dato ingresado no es correcto. Intenta de nuevo. ***")
@@ -151,6 +169,17 @@ def crearUsuario(usuario):
     #     print('Not Found.')
 
 
+def actualizarUsuario(IdUsuario, usuario):
+    response = requests.put(
+        f"https://localhost:44357/api/Usuario/ActualizarUsuario/{IdUsuario}",
+        json=usuario,
+        verify=False,
+    )
+    json_response = response.json()
+    print("json_response: ", json_response["value"])
+    # print("response: ", response.json())
+
+
 def verEntradaFormulario(usuario):
     print("_" * 40 + "\n")
     print("Tú ingresaste en el formulario...\n")
@@ -175,16 +204,16 @@ def formularioUsuario():
     usuario["fecha_nacimiento"] = input("Ingresa la fecha de nacimiento: ")
     usuario["sexo"] = input("Ingresa el sexo: ")
     usuario["celular"] = input("Ingresa el celular: ")
-    usuario["correo"] = input("Ingresa el correo:  ")
-    usuario["contrasenia"] = input("Ingresa la contraseña: ")
+    usuario["correo"] = validarCampo(emailPattern, "text", "Ingresa el correo:  ")
+    usuario["contrasenia"] = validarCampo(
+        passwordPattern, "password", "Ingresa la contraseña"
+    )
     usuario["es_activo"] = validarDatos(
-        r"^[0-1]{1}$", "Ingresa el estado de actividad \n (1-Activo / 0-Inactivo): : "
+        r"^[0-1]{1}$", "Ingresa el estado de actividad: "
     )
-    usuario["id_rol"] = validarDatos(
-        r"^[2-7]{1}$",
-        "\nIngresa el rol: ",
-    )
+    usuario["id_rol"] = validarDatos(r"^[2-7]{1}$", "Ingresa el rol: ")
     verEntradaFormulario(usuario)
+    return usuario
 
 
 # Ciclo para que nos muestre el menú por cada vez que entramos y salimos de las opciones.
@@ -207,7 +236,8 @@ while True:
                 print("   [2] Crear usuario.")
                 print("_" * 40 + "\n")
 
-                formularioUsuario()
+                usuario = formularioUsuario()
+
                 validarPregunta(
                     r"^[01]{1}$",
                     "\n¿Deseas guardar el usuario del formulario? \n (1-Si / 0-No): ",
@@ -225,25 +255,31 @@ while True:
 
         elif opcion == "3":
             while respuesta == 1:
-                # IdUsuario = validarDatos(
-                #     r"^[1-9]{1}[0-9]{0,}$",
-                #     "\nDime el ID del usuario que deseas actualizar: ",
-                # )
+                print("_" * 40 + "\n")
+                print("   [2] Actualizar usuario.")
+                print("_" * 40 + "\n")
 
-                formularioUsuario()
+                IdUsuario = validarDatos(
+                    r"^[1-9]{1}[0-9]{0,}$",
+                    "\nDime el ID del usuario que deseas actualizar: ",
+                )
 
-                emailPattern = r"^(?=[a-zA-Z0-9@.%+-]{6,254}$)[a-zA-Z0-9.%+-]{1,64}@(?:[a-zA-Z0-9-]{1,63}\.){1,8}[a-zA-Z]{2,63}$"
-                passwordPattern = r"(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{10,})"
+                usuario = formularioUsuario()
+                
+                validarPregunta(
+                    r"^[01]{1}$",
+                    "\n¿Deseas actualizar el usuario del formulario? \n (1-Si / 0-No): ",
+                )
 
-                correo = validarDatos(emailPattern ,"\nIngresa el correo:  ")
-                print(correo)
-                contrasenia = validarDatos(passwordPattern ,"\nIngresa la contraseña: ")
-                print(contrasenia)
-
-            #     validarPregunta(r"^[1-9]{1}[0-9]{0,}$","\n¿Cuántos articulos se registrarán?: ")
-            # validarPregunta(r"^[01]{1}$","\n¿Deseas realizar otra venta? \n (1-Si / 0-No): ")
-
-            #     respuesta = resultado
+                if resultado == 1:
+                    actualizarUsuario(IdUsuario, usuario)
+                    break
+                else:
+                    validarPregunta(
+                        r"^[01]{1}$",
+                        "\n¿Deseas crear un nuevo usuario? \n (1-Si / 0-No): ",
+                    )
+                    respuesta = resultado
 
         elif opcion == "4":
             respuesta = 1
