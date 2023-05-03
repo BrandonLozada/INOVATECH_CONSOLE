@@ -31,8 +31,10 @@ dictEstadosUsuario = {0: "Inactivo", 1: "Activo"}
 lstUsuarios = []
 
 # Expresión regular
+namePatterns = r"^([ \u00c0-\u01ffa-zA-Z'\-])+$"
 emailPattern = r"^(?=[a-zA-Z0-9@.%+-]{6,254}$)[a-zA-Z0-9.%+-]{1,64}@(?:[a-zA-Z0-9-]{1,63}\.){1,8}[a-zA-Z]{2,63}$"
 passwordPattern = r"(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{10,})"
+phonePattern = r"^[0][1-9]\d{9}$|^[1-9]\d{9}$"
 
 # Estructura del objeto usuarioDTO conforme a la WEB API.
 usuario = {
@@ -222,12 +224,12 @@ def verEntradaFormulario(usuario):
 # Función de formulario para ingresar los valores al objeto usuario.
 def formularioUsuario():
     usuario = {}
-    usuario["nombre"] = input("Ingresa los nombres: ")
-    usuario["primer_apellido"] = input("Ingresa el primer apellido: ")
-    usuario["segundo_apellido"] = input("Ingresa el segundo apellido: ")
-    usuario["fecha_nacimiento"] = input("Ingresa la fecha de nacimiento: ")
-    usuario["sexo"] = input("Ingresa el sexo: ")
-    usuario["celular"] = input("Ingresa el celular: ")
+    usuario["nombre"] = validarCampo(namePatterns, "text", "Ingresa los nombres: ")
+    usuario["primer_apellido"] = validarCampo(namePatterns, "text", "Ingresa el primer apellido: ")
+    usuario["segundo_apellido"] = validarCampo(namePatterns, "text", "Ingresa el segundo apellido: ")
+    usuario["fecha_nacimiento"] = validarFecha()
+    usuario["sexo"] = validarCampo(r"^[MF]{1}$", "text", "Ingresa el sexo (F-Femenino / M-Masculino) : ")
+    usuario["celular"] = validarCampo(phonePattern, "text", "Ingresa el celular: ")
     usuario["correo"] = validarCampo(emailPattern, "text", "Ingresa el correo:  ")
     usuario["contrasenia"] = validarCampo(
         passwordPattern, "password", "Ingresa la contraseña"
@@ -309,15 +311,14 @@ while True:
                     )
                     respuesta = resultado
 
-
         elif opcion == "4":
             while respuesta == 1:
                 print("_" * 40 + "\n")
                 print("   [1] Eliminar usuario.")
                 print("_" * 40 + "\n")
 
-                fecha_nacimiento = validarFecha()
-                print(fecha_nacimiento)
+
+
 
         elif opcion == "x" or opcion == "X":
             print("\n         *** Inovatech ***       ")
