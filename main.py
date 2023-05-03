@@ -115,12 +115,11 @@ def validarCampo(_patron, _tipo="text", _pregunta="Dame un dato: "):
 
 
 def validarFecha():
+    fecha_aceptada = False
     while not fecha_aceptada:
         try:
             fecha_actual = datetime.date.today()
-            fecha_capturada = input(
-                "\nIngresa una fecha específica para generar reporte (dd/mm/aaaa): "
-            )
+            fecha_capturada = input("\nFecha de nacimiento (dd/mm/aaaa): ")
             fecha_procesada = datetime.datetime.strptime(
                 fecha_capturada, "%Y/%m/%d"
             ).date()
@@ -162,7 +161,10 @@ def consultarUsuarios():
     ## json_object = json.loads(lstUsuarios)
     # json_formatted_str = json.dumps(lstUsuarios, indent=2)
     # print(json_formatted_str)
-    imprimirUsuarios(lstUsuarios)
+    if lstUsuarios:
+        imprimirUsuarios(lstUsuarios)
+    else:
+        print("No hay usuarios registrados.")
 
 
 # Función que imprime los usuarios.
@@ -243,7 +245,7 @@ while True:
     menuPrincipal()
     opcion = input("¿Qué opción deseas?: ")
     respuesta = 1
-    if RegEx(opcion, "^[123xX0]{1}$"):
+    if RegEx(opcion, "^[1234xX0]{1}$"):
         if opcion == "1":
             # while respuesta == 1:
             print("_" * 40 + "\n")
@@ -286,6 +288,10 @@ while True:
                     "\nDime el ID del usuario que deseas actualizar: ",
                 )
 
+                # TODO: Comprobar la existencia del usuario con el IdUsuario proporcionado
+                # if response == null
+                #     break
+
                 usuario = formularioUsuario()
 
                 validarPregunta(
@@ -303,41 +309,22 @@ while True:
                     )
                     respuesta = resultado
 
+
         elif opcion == "4":
-            respuesta = 1
-            exportar = 1
             while respuesta == 1:
+                print("_" * 40 + "\n")
+                print("   [1] Eliminar usuario.")
+                print("_" * 40 + "\n")
+
                 fecha_nacimiento = validarFecha()
                 print(fecha_nacimiento)
-                
+
         elif opcion == "x" or opcion == "X":
             print("\n         *** Inovatech ***       ")
             break
 
         else:
             print("\n*** No has pulsado ninguna opción correcta. Intenta de nuevo. ***")
+
     else:
         print("\n*** Esa respuesta no es válida. Intenta de nuevo. ***")
-
-
-def getConsultarUsuarios(endPoint):
-    headers = {"Content-Type": "application/json"}
-    response = requests.get(BASE_URL + endPoint, verify=False)
-    print(response.text)
-    return response.json()
-
-
-def postCrearUsuario(endPoint, payload):
-    headers = {"Content-Type": "application/json"}
-    response = requests.post(BASE_URL + endPoint, json=payload, verify=False)
-    print(response.json())
-    if response.status_code == 200 or response.status_code == 201:
-        print("Información guardada")
-    elif response.status_code == 404:
-        print("Not Found.")
-    return response.json()
-
-
-d = {"a": 1, "b": 2}
-d.clear()
-print(d)  # {}
