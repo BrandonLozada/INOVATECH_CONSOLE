@@ -9,8 +9,21 @@ urllib3.disable_warnings()
 # Librerías y desabilitación de advertencias.
 
 # Ruta base del EndPoint de la WEB API.
-BASE_URL = "https://localhost:44357/api"
-# BASE_URL_TEST = 'https://6448108050c25337443776cb.mockapi.io/api'
+BASE_URL = "https://localhost:44357/api" # Para la pc
+BASE_URL = "https://localhost:7187/api"  # Para la laptop
+
+# TODO: Hacer la identificación del usuario al endpoint "validar".
+# Variable global para la autorización.
+authStore = { "accessToken": ''}
+
+def myfunc():
+  global authStore
+  authStore["accessToken"] = "fantastic"
+
+myfunc()
+
+print("My token es " + authStore["accessToken"])
+
 
 # Tuplas
 columnas = ("ID", "Nombre completo", "Correo", "Rol", "Estado", "Fecha registro")
@@ -154,6 +167,7 @@ def menuPrincipal():
 
 # Función que obtiene con request.get los usuarios.
 def consultarUsuarios():
+    # TODO: En cada petición agregar un TRY, CATCH, FINALLY.
     headers = {"Content-Type": "application/json"}
     response = requests.get(
         "https://localhost:44357/api/Usuario/ListarUsuario", verify=False
@@ -183,6 +197,7 @@ def imprimirUsuarios(lstUsuarios):
 
 
 def crearUsuario(usuario):
+    # TODO: En cada petición agregar un TRY, CATCH, FINALLY.
     response = requests.post(
         "https://localhost:44357/api/Usuario/GuardarUsuario", json=usuario, verify=False
     )
@@ -196,6 +211,7 @@ def crearUsuario(usuario):
 
 
 def actualizarUsuario(IdUsuario, usuario):
+    # TODO: En cada petición agregar un TRY, CATCH, FINALLY.
     response = requests.put(
         f"https://localhost:44357/api/Usuario/ActualizarUsuario/{IdUsuario}",
         json=usuario,
@@ -240,6 +256,10 @@ def formularioUsuario():
     usuario["id_rol"] = validarDatos(r"^[2-7]{1}$", "Ingresa el rol: ")
     verEntradaFormulario(usuario)
     return usuario
+
+
+
+# Agregar un inicio de sesión while.
 
 
 # Ciclo para que nos muestre el menú por cada vez que entramos y salimos de las opciones.
