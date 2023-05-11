@@ -1,4 +1,5 @@
 import requests
+from requests.structures import CaseInsensitiveDict
 import urllib3
 import re
 import pandas as pd
@@ -9,21 +10,35 @@ urllib3.disable_warnings()
 # Librerías y desabilitación de advertencias.
 
 # Ruta base del EndPoint de la WEB API.
-BASE_URL = "https://localhost:44357/api" # Para la pc
-BASE_URL = "https://localhost:7187/api"  # Para la laptop
+BASE_URL = "https://localhost:44357/api"  # Para la pc
+# BASE_URL = "https://localhost:7187/api"  # Para la laptop
 
 # TODO: Hacer la identificación del usuario al endpoint "validar".
 # Variable global para la autorización.
-authStore = { "accessToken": ''}
+authStore = {"accessToken": ""}
+
 
 def myfunc():
-  global authStore
-  authStore["accessToken"] = "fantastic"
+    global authStore
+    authStore["accessToken"] = "fantastic"
+
 
 myfunc()
 
 print("My token es " + authStore["accessToken"])
 
+# headers = CaseInsensitiveDict()
+# headers["Accept"] = "application/json"
+# headers["Content-Type"] = "application/json"
+# headers["Authorization"] = "Bearer " + authStore['accessToken']
+
+headers = {
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+    # "Authorization": "Bearer " + authStore["accessToken"],
+}
+
+print(headers)
 
 # Tuplas
 columnas = ("ID", "Nombre completo", "Correo", "Rol", "Estado", "Fecha registro")
@@ -155,13 +170,22 @@ def validarFecha():
 # Función del menú para que se ejecute cada vez al término de cada opción.
 def menuPrincipal():
     print("_" * 40)
-    print("\n         *** Inovatech ***       ")
+    # print("\n         *** Inovatech ***       ")
     print("\n            Menú principal           ")
     print("   [1] Consultar usuarios.")
     print("   [2] Crear usuario.")
     print("   [3] Actualizar usuario.")
     print("   [4] Eliminar usuario.")
     print("   [X] Salir.")
+    print("_" * 40 + "\n")
+
+
+def tituloPrincipal():
+    print("_" * 40)
+    print("\n         *** Inovatech ***       ")
+    print("\n            Inicio de sesión           ")
+    print("_" * 40 + "\n")
+    print("   Ingresa tus credenciales.")
     print("_" * 40 + "\n")
 
 
@@ -241,10 +265,16 @@ def verEntradaFormulario(usuario):
 def formularioUsuario():
     usuario = {}
     usuario["nombre"] = validarCampo(namePatterns, "text", "Ingresa los nombres: ")
-    usuario["primer_apellido"] = validarCampo(namePatterns, "text", "Ingresa el primer apellido: ")
-    usuario["segundo_apellido"] = validarCampo(namePatterns, "text", "Ingresa el segundo apellido: ")
+    usuario["primer_apellido"] = validarCampo(
+        namePatterns, "text", "Ingresa el primer apellido: "
+    )
+    usuario["segundo_apellido"] = validarCampo(
+        namePatterns, "text", "Ingresa el segundo apellido: "
+    )
     usuario["fecha_nacimiento"] = validarFecha()
-    usuario["sexo"] = validarCampo(r"^[MF]{1}$", "text", "Ingresa el sexo (F-Femenino / M-Masculino) : ")
+    usuario["sexo"] = validarCampo(
+        r"^[MF]{1}$", "text", "Ingresa el sexo (F-Femenino / M-Masculino) : "
+    )
     usuario["celular"] = validarCampo(phonePattern, "text", "Ingresa el celular: ")
     usuario["correo"] = validarCampo(emailPattern, "text", "Ingresa el correo:  ")
     usuario["contrasenia"] = validarCampo(
@@ -258,8 +288,37 @@ def formularioUsuario():
     return usuario
 
 
+def formularioInicioSesion():
+    usuario = {}
+    usuario["correo"] = validarCampo(emailPattern, "text", "Correo:  ")
+    usuario["contrasenia"] = validarCampo(passwordPattern, "password", "Contraseña")
+    return usuario
+
 
 # Agregar un inicio de sesión while.
+
+# Función para autenticarme en la WEB API
+while True:
+    tituloPrincipal()
+    usuario = formularioInicioSesion()
+    try:
+        # TODO: Checar si es necesario utilizar el "verify=False".
+        response = requests.post(
+            BASE_URL + "Validar", headers=headers, data=usuario, verify=False
+        )
+        json_data = response.json()
+        # TODO: Obtener el value y el accessToken del value.
+        lstMisDatos = json_data["value"]
+        authStore["accessToken"] = json_data["accessToken"]
+        # TODO: De una vez validar authStore.accesToken.
+        if lstMisDatos:
+            # TODO: Desde la API validar si no encuentra usuario no retorne el accessToken, algo hardcoreado simple no retornarla ni vacía.
+            imprimirUsuarios(lstMisDatos)
+            break
+        else:
+            print("No se ha podido encontrar tu cuenta.")
+    except:
+        print("Hubo un problema")
 
 
 # Ciclo para que nos muestre el menú por cada vez que entramos y salimos de las opciones.
@@ -336,9 +395,6 @@ while True:
                 print("_" * 40 + "\n")
                 print("   [1] Eliminar usuario.")
                 print("_" * 40 + "\n")
-
-
-
 
         elif opcion == "x" or opcion == "X":
             print("\n         *** Inovatech ***       ")
