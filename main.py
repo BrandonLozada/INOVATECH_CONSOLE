@@ -151,7 +151,9 @@ def validarFecha():
         try:
             fecha_actual = datetime.date.today()
             fecha_capturada = input("Fecha de nacimiento (aaaa/mm/dd): ")
-            fecha_procesada = datetime.datetime.strptime(fecha_capturada, "%Y/%m/%d").date()
+            fecha_procesada = datetime.datetime.strptime(
+                fecha_capturada, "%Y/%m/%d"
+            ).date()
             if fecha_procesada <= fecha_actual:
                 fecha_aceptada = True
             else:
@@ -163,7 +165,7 @@ def validarFecha():
             print(
                 "*** La fecha proporcionada no se encuentra en el formato indicato, favor de corregir. ***"
             )
-    return fecha_procesada.strftime('%Y/%m/%d')
+    return fecha_procesada.strftime("%Y/%m/%d")
 
 
 # Función del menú para que se ejecute cada vez al término de cada opción.
@@ -188,6 +190,30 @@ def tituloPrincipal():
     print("_" * 40 + "\n")
 
 
+# Función que obtiene con request.get un usuario específico.
+def encontrarUsuario(IdUsuario):
+    # TODO: En cada petición agregar un TRY, CATCH, FINALLY.
+    headers = CaseInsensitiveDict()
+    headers["Accept"] = "application/json"
+    headers["Authorization"] = "Bearer " + f"{authStore['accessToken']}"
+    headers["Content-Type"] = "application/json"
+    response = requests.get(
+        BASE_URL + f"/Usuario/ConsultarUsuario/{IdUsuario}",
+        headers=headers,
+        verify=False,
+    )
+    json_response = response.json()
+
+    if json_response["value"] != []:
+        usuario = {}
+        usuario = json_response["value"][0]
+        verEntradaFormulario(usuario)
+        return True
+    else:
+        print("\nNo se encontró el usuario con ese id")
+        return False
+
+
 # Función que obtiene con request.get los usuarios.
 def consultarUsuarios():
     # TODO: En cada petición agregar un TRY, CATCH, FINALLY.
@@ -200,9 +226,7 @@ def consultarUsuarios():
     )
     json_data = response.json()
     lstUsuarios = json_data["value"]
-    ## json_object = json.loads(lstUsuarios)
-    # json_formatted_str = json.dumps(lstUsuarios, indent=2)
-    # print(json_formatted_str)
+
     if lstUsuarios:
         imprimirUsuarios(lstUsuarios)
     else:
@@ -224,21 +248,18 @@ def imprimirUsuarios(lstUsuarios):
 
 def crearUsuario(usuario):
     # TODO: En cada petición agregar un TRY, CATCH, FINALLY.
-    print(usuario)
     headers = CaseInsensitiveDict()
     headers["Accept"] = "application/json"
     headers["Authorization"] = "Bearer " + f"{authStore['accessToken']}"
     headers["Content-Type"] = "application/json"
     response = requests.post(
-        BASE_URL + "/Usuario/GuardarUsuario",  headers=headers, json=usuario, verify=False
+        BASE_URL + "/Usuario/GuardarUsuario",
+        headers=headers,
+        json=usuario,
+        verify=False,
     )
     json_response = response.json()
     print("\n", json_response["value"])
-
-    # if response.status_code == 200 or response.status_code == 201:
-    #     print('Información guardada')
-    # elif response.status_code == 404:
-    #     print('Not Found.')
 
 
 def actualizarUsuario(IdUsuario, usuario):
@@ -257,6 +278,7 @@ def actualizarUsuario(IdUsuario, usuario):
     print("\n", json_response["value"])
     # print("response: ", response.json())
 
+
 def eliminarUsuario(IdUsuario):
     # TODO: En cada petición agregar un TRY, CATCH, FINALLY.
     headers = CaseInsensitiveDict()
@@ -266,34 +288,15 @@ def eliminarUsuario(IdUsuario):
     response = requests.delete(
         BASE_URL + f"/Usuario/EliminarUsuarioFisico/{IdUsuario}",
         headers=headers,
-        json=usuario,
         verify=False,
     )
     json_response = response.json()
     print("\n", json_response["value"])
-    # print("response: ", response.json())
-
-
-# def encontrarUsuario(IdUsuario):
-#     # TODO: En cada petición agregar un TRY, CATCH, FINALLY.
-#     headers = CaseInsensitiveDict()
-#     headers["Accept"] = "application/json"
-#     headers["Authorization"] = "Bearer " + f"{authStore['accessToken']}"
-#     headers["Content-Type"] = "application/json"
-#     response = requests.delete(
-#         BASE_URL + f"/Usuario/EliminarUsuarioFisico/{IdUsuario}",
-#         headers=headers,
-#         json=usuario,
-#         verify=False,
-#     )
-#     json_response = response.json()
-#     print("\n", json_response["value"])
-#     # print("response: ", response.json())
 
 
 def verEntradaFormulario(usuario):
     print("_" * 40 + "\n")
-    print("Tú ingresaste en el formulario...\n")
+    # print("Tú ingresaste en el formulario...\n")
     print("Nombre: ", usuario["nombre"])
     print("Primer apellido: ", usuario["primer_apellido"])
     print("Segundo apellido: ", usuario["segundo_apellido"])
@@ -329,6 +332,8 @@ def formularioUsuario():
         r"^[0-1]{1}$", "Ingresa el estado de actividad: "
     )
     usuario["id_rol"] = validarDatos(r"^[2-7]{1}$", "Ingresa el rol: ")
+
+    print("\nTú ingresaste en el formulario...\n")
     verEntradaFormulario(usuario)
     return usuario
 
@@ -347,21 +352,29 @@ while True:
     tituloPrincipal()
     usuario = formularioInicioSesion()
     try:
-        # TODO: Checar si es necesario utilizar el "verify=False".
-        # print(usuario)
         response = requests.post(
-            BASE_URL + "/Autenticacion/Validar",  json=usuario, verify=False # data
+            BASE_URL + "/Autenticacion/Validar", json=usuario, verify=False  # data
         )
         json_data = response.json()
-        # TODO: Obtener el value y el accessToken del value.
-        lstMisDatos = json_data["value"]
-        authStore["accessToken"] = json_data["accessToken"]
-        # TODO: De una vez validar authStore.accesToken.
-        if lstMisDatos:
-            print("\n   Bienvenido, " + lstMisDatos[0]["nombre"] + " " + lstMisDatos[0]["primer_apellido"])
+        lstMisDatos = []
+
+        if (
+            json_data["value"]
+            != "No existe información relacionada con esas credenciales."
+        ):
+            lstMisDatos = json_data["value"]
+            authStore["accessToken"] = json_data["accessToken"]
+
+        if lstMisDatos != []:
+            print(
+                "\n      Bienvenido, "
+                + lstMisDatos[0]["nombre"]
+                + " "
+                + lstMisDatos[0]["primer_apellido"]
+            )
             break
         else:
-            print("No se ha podido encontrar tu cuenta.")
+            print("\n", json_data["value"])
     except:
         print("Hubo un problema")
 
@@ -405,6 +418,7 @@ while True:
 
         elif opcion == "3":
             while respuesta == 1:
+                resultado = 0
                 print("_" * 40 + "\n")
                 print("   [2] Actualizar usuario.")
                 print("_" * 40 + "\n")
@@ -414,16 +428,15 @@ while True:
                     "\nDime el ID del usuario que deseas actualizar: ",
                 )
 
-                # TODO: Comprobar la existencia del usuario con el IdUsuario proporcionado
-                # if response == null
-                #     break
+                encuentra = encontrarUsuario(IdUsuario)
 
-                usuario = formularioUsuario()
-
-                validarPregunta(
-                    r"^[01]{1}$",
-                    "\n¿Deseas actualizar el usuario del formulario? \n (1-Si / 0-No): ",
-                )
+                if encuentra:
+                    print("\n")
+                    usuario = formularioUsuario()
+                    validarPregunta(
+                        r"^[01]{1}$",
+                        "\n¿Deseas actualizar el usuario del formulario? \n (1-Si / 0-No): ",
+                    )
 
                 if resultado == 1:
                     actualizarUsuario(IdUsuario, usuario)
@@ -431,15 +444,39 @@ while True:
                 else:
                     validarPregunta(
                         r"^[01]{1}$",
-                        "\n¿Deseas crear un nuevo usuario? \n (1-Si / 0-No): ",
+                        "\n¿Deseas editar otro usuario? \n (1-Si / 0-No): ",
                     )
                     respuesta = resultado
 
         elif opcion == "4":
             while respuesta == 1:
+                resultado = 0
                 print("_" * 40 + "\n")
                 print("   [1] Eliminar usuario.")
                 print("_" * 40 + "\n")
+
+                IdUsuario = validarDatos(
+                    r"^[1-9]{1}[0-9]{0,}$",
+                    "\nDime el ID del usuario que deseas eliminar: ",
+                )
+
+                encuentra = encontrarUsuario(IdUsuario)
+
+                if encuentra:
+                    validarPregunta(
+                        r"^[01]{1}$",
+                        "\n¿Deseas eliminar el usuario encontrado? \n (1-Si / 0-No): ",
+                    )
+
+                if resultado == 1:
+                    eliminarUsuario(IdUsuario)
+                    break
+                else:
+                    validarPregunta(
+                        r"^[01]{1}$",
+                        "\n¿Deseas eliminar otro usuario? \n (1-Si / 0-No): ",
+                    )
+                    respuesta = resultado
 
         elif opcion == "x" or opcion == "X":
             print("\n         *** Inovatech ***       ")
