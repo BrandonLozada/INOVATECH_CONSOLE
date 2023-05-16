@@ -18,27 +18,27 @@ BASE_URL = "https://localhost:44357/api"  # Para la pc
 authStore = {"accessToken": ""}
 
 
-def myfunc():
-    global authStore
-    authStore["accessToken"] = "fantastic"
+# def myfunc():
+#     global authStore
+#     authStore["accessToken"] = "fantastic"
 
 
-myfunc()
+# myfunc()
 
-print("My token es " + authStore["accessToken"])
+# print("My token es " + authStore["accessToken"])
 
 # headers = CaseInsensitiveDict()
 # headers["Accept"] = "application/json"
 # headers["Content-Type"] = "application/json"
 # headers["Authorization"] = "Bearer " + authStore['accessToken']
 
-headers = {
-    "Accept": "application/json",
-    "Content-Type": "application/json",
-    # "Authorization": "Bearer " + authStore["accessToken"],
-}
+# headers = {
+#     "Accept": "application/json",
+#     "Content-Type": "application/json",
+#     # "Authorization": "Bearer " + authStore["accessToken"],
+# }
 
-print(headers)
+# print(headers)
 
 # Tuplas
 columnas = ("ID", "Nombre completo", "Correo", "Rol", "Estado", "Fecha registro")
@@ -150,10 +150,8 @@ def validarFecha():
     while not fecha_aceptada:
         try:
             fecha_actual = datetime.date.today()
-            fecha_capturada = input("\nFecha de nacimiento (dd/mm/aaaa): ")
-            fecha_procesada = datetime.datetime.strptime(
-                fecha_capturada, "%Y/%m/%d"
-            ).date()
+            fecha_capturada = input("Fecha de nacimiento (aaaa/mm/dd): ")
+            fecha_procesada = datetime.datetime.strptime(fecha_capturada, "%Y/%m/%d").date()
             if fecha_procesada <= fecha_actual:
                 fecha_aceptada = True
             else:
@@ -165,7 +163,7 @@ def validarFecha():
             print(
                 "*** La fecha proporcionada no se encuentra en el formato indicato, favor de corregir. ***"
             )
-    return fecha_procesada
+    return fecha_procesada.strftime('%Y/%m/%d')
 
 
 # Función del menú para que se ejecute cada vez al término de cada opción.
@@ -193,9 +191,12 @@ def tituloPrincipal():
 # Función que obtiene con request.get los usuarios.
 def consultarUsuarios():
     # TODO: En cada petición agregar un TRY, CATCH, FINALLY.
-    headers = {"Content-Type": "application/json"}
+    headers = CaseInsensitiveDict()
+    headers["Accept"] = "application/json"
+    headers["Authorization"] = "Bearer " + f"{authStore['accessToken']}"
+    headers["Content-Type"] = "application/json"
     response = requests.get(
-        "https://localhost:44357/api/Usuario/ListarUsuario", verify=False
+        BASE_URL + "/Usuario/ListarUsuario", headers=headers, verify=False
     )
     json_data = response.json()
     lstUsuarios = json_data["value"]
@@ -223,8 +224,13 @@ def imprimirUsuarios(lstUsuarios):
 
 def crearUsuario(usuario):
     # TODO: En cada petición agregar un TRY, CATCH, FINALLY.
+    print(usuario)
+    headers = CaseInsensitiveDict()
+    headers["Accept"] = "application/json"
+    headers["Authorization"] = "Bearer " + f"{authStore['accessToken']}"
+    headers["Content-Type"] = "application/json"
     response = requests.post(
-        "https://localhost:44357/api/Usuario/GuardarUsuario", json=usuario, verify=False
+        BASE_URL + "/Usuario/GuardarUsuario",  headers=headers, json=usuario, verify=False
     )
     json_response = response.json()
     print("\n", json_response["value"])
@@ -237,14 +243,52 @@ def crearUsuario(usuario):
 
 def actualizarUsuario(IdUsuario, usuario):
     # TODO: En cada petición agregar un TRY, CATCH, FINALLY.
+    headers = CaseInsensitiveDict()
+    headers["Accept"] = "application/json"
+    headers["Authorization"] = "Bearer " + f"{authStore['accessToken']}"
+    headers["Content-Type"] = "application/json"
     response = requests.put(
-        f"https://localhost:44357/api/Usuario/ActualizarUsuario/{IdUsuario}",
+        BASE_URL + f"/Usuario/ActualizarUsuario/{IdUsuario}",
+        headers=headers,
         json=usuario,
         verify=False,
     )
     json_response = response.json()
-    print("json_response: ", json_response["value"])
+    print("\n", json_response["value"])
     # print("response: ", response.json())
+
+def eliminarUsuario(IdUsuario):
+    # TODO: En cada petición agregar un TRY, CATCH, FINALLY.
+    headers = CaseInsensitiveDict()
+    headers["Accept"] = "application/json"
+    headers["Authorization"] = "Bearer " + f"{authStore['accessToken']}"
+    headers["Content-Type"] = "application/json"
+    response = requests.delete(
+        BASE_URL + f"/Usuario/EliminarUsuarioFisico/{IdUsuario}",
+        headers=headers,
+        json=usuario,
+        verify=False,
+    )
+    json_response = response.json()
+    print("\n", json_response["value"])
+    # print("response: ", response.json())
+
+
+# def encontrarUsuario(IdUsuario):
+#     # TODO: En cada petición agregar un TRY, CATCH, FINALLY.
+#     headers = CaseInsensitiveDict()
+#     headers["Accept"] = "application/json"
+#     headers["Authorization"] = "Bearer " + f"{authStore['accessToken']}"
+#     headers["Content-Type"] = "application/json"
+#     response = requests.delete(
+#         BASE_URL + f"/Usuario/EliminarUsuarioFisico/{IdUsuario}",
+#         headers=headers,
+#         json=usuario,
+#         verify=False,
+#     )
+#     json_response = response.json()
+#     print("\n", json_response["value"])
+#     # print("response: ", response.json())
 
 
 def verEntradaFormulario(usuario):
@@ -304,9 +348,9 @@ while True:
     usuario = formularioInicioSesion()
     try:
         # TODO: Checar si es necesario utilizar el "verify=False".
-        print(usuario)
+        # print(usuario)
         response = requests.post(
-            BASE_URL + "Validar",  json=usuario, verify=False # data
+            BASE_URL + "/Autenticacion/Validar",  json=usuario, verify=False # data
         )
         json_data = response.json()
         # TODO: Obtener el value y el accessToken del value.
@@ -314,14 +358,12 @@ while True:
         authStore["accessToken"] = json_data["accessToken"]
         # TODO: De una vez validar authStore.accesToken.
         if lstMisDatos:
-            # TODO: Desde la API validar si no encuentra usuario no retorne el accessToken, algo hardcoreado simple no retornarla ni vacía.
-            imprimirUsuarios(lstMisDatos)
+            print("\n   Bienvenido, " + lstMisDatos[0]["nombre"] + " " + lstMisDatos[0]["primer_apellido"])
             break
         else:
             print("No se ha podido encontrar tu cuenta.")
     except:
         print("Hubo un problema")
-        break
 
 
 # Ciclo para que nos muestre el menú por cada vez que entramos y salimos de las opciones.
