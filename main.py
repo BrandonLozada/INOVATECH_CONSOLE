@@ -17,29 +17,6 @@ BASE_URL = "https://localhost:44357/api"  # Para la pc
 # Variable global para la autorización.
 authStore = {"accessToken": ""}
 
-
-# def myfunc():
-#     global authStore
-#     authStore["accessToken"] = "fantastic"
-
-
-# myfunc()
-
-# print("My token es " + authStore["accessToken"])
-
-# headers = CaseInsensitiveDict()
-# headers["Accept"] = "application/json"
-# headers["Content-Type"] = "application/json"
-# headers["Authorization"] = "Bearer " + authStore['accessToken']
-
-# headers = {
-#     "Accept": "application/json",
-#     "Content-Type": "application/json",
-#     # "Authorization": "Bearer " + authStore["accessToken"],
-# }
-
-# print(headers)
-
 # Tuplas
 columnas = ("ID", "Nombre completo", "Correo", "Rol", "Estado", "Fecha registro")
 
@@ -247,7 +224,6 @@ def imprimirUsuarios(lstUsuarios):
 
 
 def crearUsuario(usuario):
-    # TODO: En cada petición agregar un TRY, CATCH, FINALLY.
     headers = CaseInsensitiveDict()
     headers["Accept"] = "application/json"
     headers["Authorization"] = "Bearer " + f"{authStore['accessToken']}"
@@ -263,7 +239,6 @@ def crearUsuario(usuario):
 
 
 def actualizarUsuario(IdUsuario, usuario):
-    # TODO: En cada petición agregar un TRY, CATCH, FINALLY.
     headers = CaseInsensitiveDict()
     headers["Accept"] = "application/json"
     headers["Authorization"] = "Bearer " + f"{authStore['accessToken']}"
@@ -280,7 +255,6 @@ def actualizarUsuario(IdUsuario, usuario):
 
 
 def eliminarUsuario(IdUsuario):
-    # TODO: En cada petición agregar un TRY, CATCH, FINALLY.
     headers = CaseInsensitiveDict()
     headers["Accept"] = "application/json"
     headers["Authorization"] = "Bearer " + f"{authStore['accessToken']}"
@@ -296,7 +270,6 @@ def eliminarUsuario(IdUsuario):
 
 def verEntradaFormulario(usuario):
     print("_" * 40 + "\n")
-    # print("Tú ingresaste en el formulario...\n")
     print("Nombre: ", usuario["nombre"])
     print("Primer apellido: ", usuario["primer_apellido"])
     print("Segundo apellido: ", usuario["segundo_apellido"])
@@ -344,8 +317,6 @@ def formularioInicioSesion():
     usuario["contrasenia"] = validarCampo(passwordPattern, "password", "Contraseña")
     return usuario
 
-
-# Agregar un inicio de sesión while.
 
 # Función para autenticarme en la WEB API
 while True:
