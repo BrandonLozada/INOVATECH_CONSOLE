@@ -388,7 +388,7 @@ while True:
         if opcion == "1":
             # while respuesta == 1:
             print("_" * 40 + "\n")
-            print("   [1] Consultar usuarios.")
+            print("        [1] Consultar usuarios.")
             print("_" * 40 + "\n")
 
             consultarUsuarios()
@@ -396,7 +396,7 @@ while True:
         elif opcion == "2":
             while respuesta == 1:
                 print("_" * 40 + "\n")
-                print("   [2] Crear usuario.")
+                print("        [2] Crear usuario.")
                 print("_" * 40 + "\n")
 
                 usuario = formularioUsuario()
@@ -420,7 +420,7 @@ while True:
             while respuesta == 1:
                 resultado = 0
                 print("_" * 40 + "\n")
-                print("   [2] Actualizar usuario.")
+                print("        [2] Actualizar usuario.")
                 print("_" * 40 + "\n")
 
                 IdUsuario = validarDatos(
@@ -452,7 +452,7 @@ while True:
             while respuesta == 1:
                 resultado = 0
                 print("_" * 40 + "\n")
-                print("   [1] Eliminar usuario.")
+                print("        [4] Eliminar usuario.")
                 print("_" * 40 + "\n")
 
                 IdUsuario = validarDatos(
